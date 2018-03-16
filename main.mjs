@@ -52,12 +52,23 @@ const { SALTED_CARAMEL_USERNAME, SALTED_CARAMEL_PASSWORD } = process.env;
 
         // 3.2. Engage with author
         // 3.2.1. Open author's page
-        // 3.2.2. Engage with it if number of followers is less then M and not following yet
-        // 3.2.2.1. Get K random photos from L latest
-        // 3.2.2.2. Like each photo
-        // 3.2.2.2.1. Open photo page
-        // 3.2.2.2.2. Like the photo if one is not liked yet
-        // 3.2.2.3. Follow author
+        // 3.2.1.1. Find author's username
+        const username = await page.evaluate(() => document.querySelector('header a').title);
+        // 3.2.1.2. Go to author's page
+        await page.goto(`https://www.instagram.com/${username}`);
+        // 3.2.2. Engage with it if number of followers is less then maxNumberOfFollowers and not following yet
+        const numberOfFollowers = await page.evaluate(() => parseInt(document.querySelector('a[href*="followers"] span').title.replace(',', ''), 10));
+        const maxNumberOfFollowers = 1500;
+        const isNotFollowedYet = await page.evaluate(() => Array.from(document.querySelectorAll('header button')).some(button => button.innerText === 'Follow'));
+
+        if (numberOfFollowers < maxNumberOfFollowers && isNotFollowedYet) {
+          // 3.2.2.1. Get K random photos from L latest
+          // 3.2.2.2. Like each photo
+          // 3.2.2.2.1. Open photo page
+          // 3.2.2.2.2. Like the photo if one is not liked yet
+          // 3.2.2.3. Follow author
+        }
+
       }
     }
   }
