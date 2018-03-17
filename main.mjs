@@ -1,5 +1,7 @@
 import puppeteer from 'puppeteer';
 import { sleep } from './lib/utils';
+import sampleSize from 'lodash.samplesize';
+
 const { SALTED_CARAMEL_USERNAME, SALTED_CARAMEL_PASSWORD } = process.env;
 
 (async () => {
@@ -24,7 +26,7 @@ const { SALTED_CARAMEL_USERNAME, SALTED_CARAMEL_PASSWORD } = process.env;
 
   const hashtags = [
     'simplebeyond',
-    'vsco'
+    'saltedcaramel'
   ];
   // 2. For each hashtag search posts by hashtag
   for (let hashtag of hashtags) {
@@ -62,13 +64,26 @@ const { SALTED_CARAMEL_USERNAME, SALTED_CARAMEL_PASSWORD } = process.env;
         const isNotFollowedYet = await page.evaluate(() => Array.from(document.querySelectorAll('header button')).some(button => button.innerText === 'Follow'));
 
         if (numberOfFollowers < maxNumberOfFollowers && isNotFollowedYet) {
-          // 3.2.2.1. Get K random photos from L latest
+          // 3.2.2.1. Get K random photos from the latest ones
+          const numberOfPostsToLike = 4;
+          const allPostLinks = await page.evaluate(() => Array.from(document.querySelectorAll('a[href*="taken-by"]')).map(a => a.href));
+          const selectedPostLinks = sampleSize(allPostLinks, 4);
           // 3.2.2.2. Like each photo
-          // 3.2.2.2.1. Open photo page
-          // 3.2.2.2.2. Like the photo if one is not liked yet
+          for (let selectedPostLink of selectedPostLinks) {
+            // 3.2.2.2.1. Open photo page
+            await page.goto(selectedPostLink);
+            // 3.2.2.2.2. Like the photo if one is not liked yet
+            const isPostLikedAlready = await page.$('.coreSpriteHeartFull');
+            if (!isPostLikedAlready) {
+              await page.click('.coreSpriteHeartOpen');
+            }
+          }
           // 3.2.2.3. Follow author
+          await page.goto(`https://www.instagram.com/${username}`);
+          const followButtons = await page.$x('//button[contains(text(),"Follow")]');
+          const followButton = followButtons[0];
+          await followButton.click();
         }
-
       }
     }
   }
